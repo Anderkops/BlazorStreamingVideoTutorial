@@ -1,0 +1,12 @@
+﻿@page "/watch"
+
+<video width="800px" height="450" controls>
+    <source src="@Video"/>
+</video>
+
+@code
+{
+    [Parameter]
+    [SupplyParameterFromQuery(Name = "videoUrl")]
+    public string? Video { get; set; }
+}

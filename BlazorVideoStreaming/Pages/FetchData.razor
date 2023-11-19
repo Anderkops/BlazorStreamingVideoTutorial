@@ -1,0 +1,37 @@
+﻿@page "/fetchdata"
+@using BlazorVideoStreaming.Data;
+@inject BlobService BlobService
+
+<PageTitle>MyBlazorApp Videos</PageTitle>
+
+<h1>MyBlazorApp Videos</h1>
+
+@if (videos == null)
+{
+    <p>
+        <em>Loading...</em>
+    </p>
+
+}
+else
+{
+    <ul>
+        @foreach (var video in videos)
+        {
+            <li>
+                <a href="/watch?videoUrl=@video.Url">@video.Title</a>
+            </li>
+        }
+
+    </ul>
+}
+
+@code
+{
+    private List<Video>? videos;
+
+    protected override async Task OnInitializedAsync()
+    {
+        videos = await BlobService.GetVideos();
+    }
+}
