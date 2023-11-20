@@ -15,7 +15,7 @@ namespace BlazorVideoStreaming.Data
         public BlobService()
         {
             var credential = new StorageSharedKeyCredential(_storageAccount, _key);
-            var blobUrl = $"http://127.0.0.1:10000/";
+            var blobUrl = $"http://127.0.0.1:10000/{_storageAccount}";
             //var blobUrl = $"https://{_storageAccount}blobUrl.core.windows.net";
             var client = new BlobServiceClient(new Uri(blobUrl), credential);
             _videoContainer = client.GetBlobContainerClient("videos");
