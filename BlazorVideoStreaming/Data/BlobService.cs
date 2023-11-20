@@ -8,7 +8,7 @@ namespace BlazorVideoStreaming.Data
     {
         // Apenas teste local com emulador
         private readonly string _storageAccount = "devstoreaccount1";
-        private readonly string _key = "";
+        private readonly string _key = "Eby8vdM02xNOcqFlqUwJPLlmEtlCDXJ1OUzFT50uSRZ6IFsuFq2UVErCz4I6tq/K1SZFPTOtr/KBHBeksoGMGw==";
 
         private readonly BlobContainerClient _videoContainer;
 
