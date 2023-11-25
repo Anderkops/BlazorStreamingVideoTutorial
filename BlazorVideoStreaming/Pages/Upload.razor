@@ -1,11 +1,120 @@
 ﻿@page "/upload"
 
-<PageTitle>Upload videos</PageTitle>
+@using BlazorVideoStreaming.Data
+@using System.IO;
+@using System.ComponentModel.DataAnnotations
+@inject IJSRuntime JSRuntime;
+@implements IAsyncDisposable
 
-<h1>Upload</h1>
+<head>
+    <style>
+        .control_wrapper {
+            width: 500px;
+            height: 400px;
+            margin: 0 auto;
+            align-items:start;
+        }
+    </style>
+</head>
 
-<p>This page will upload the videos</p>
+<div class="col-lg-12 control-section">
+    <div class="control_wrapper">
+        <div @ref="fileDropContainer" class="file-drop-zone @HoverClass" @ondragenter="OnDragEnter" @ondragleave="OnDragLeave" @ondragover="OnDragEnter">
+            <InputFile OnChange="@onChange" @ref="inputFile" accept=".mp4,.avi,.mkv, *.png, *.jpg" />
+        </div>                    
+        <progress id="progressBar" value="0" max="100" style="width:300px;"></progress> <h3 id="status"></h3> <p id="loaded_n_total"></p>
+    </div>
+</div>
 
-@code {
+<div class="error-message-container">
+    <p>@ErrorMessage</p>
+</div>
 
-}
+@code {        
+
+    // Elementos
+    InputFile inputFile;
+    ElementReference fileDropContainer;
+    
+    IJSObjectReference _filePasteModule;
+    IJSObjectReference _filePasteFunctionReference;
+    
+    // Variáveis
+    private object selectedFile { get; set; }
+    private string ErrorMessage;
+    private const int limitVideoUpload = 2;
+    private string HoverClass;
+
+    // Estruturas
+    List<fileInfo> arq_videos = new List<fileInfo>();
+            
+    public class fileInfo
+    {
+        public string Path { get; set; }
+        public string Name { get; set; }
+        public double Size { get; set; }
+    }
+    
+    void OnDragEnter(DragEventArgs e) => HoverClass = "hover";
+    void OnDragLeave(DragEventArgs e) => HoverClass = string.Empty;
+
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            _filePasteModule = await JSRuntime.InvokeAsync<IJSObjectReference>("import", "./js/filePaste.js");
+            _filePasteFunctionReference = await _filePasteModule.InvokeAsync<IJSObjectReference>("initializeFilePaste", fileDropContainer, inputFile.Element);
+        }
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        if (_filePasteFunctionReference != null)
+        {
+            await _filePasteFunctionReference.InvokeVoidAsync("dispose");
+            await _filePasteFunctionReference.DisposeAsync();
+        }
+        if (_filePasteModule != null)
+        {
+            await _filePasteModule.DisposeAsync();
+        }
+    }
+
+    public void onChange(InputFileChangeEventArgs args)
+    {
+        arq_videos = new List<fileInfo>();
+        ErrorMessage = string.Empty;
+
+        if (args.FileCount > limitVideoUpload)
+        {
+            ErrorMessage = $"Só pode ser feito no máximo uploade de {limitVideoUpload} arquivos por vez!";
+            return;
+        }
+
+        foreach (var file in args.GetMultipleFiles())
+        {
+            var path = Path.GetFullPath("wwwroot\\Videos\\") + file.Name;
+            FileStream filestream = new FileStream(path, FileMode.Create, FileAccess.Write);            
+            file.OpenReadStream(long.MaxValue).CopyToAsync(filestream);            
+            filestream.Close();            
+            arq_videos.Add(new fileInfo() { Path = "/Videos/" + file.Name, Name = file.Name, Size = file.Size });
+        }
+    }
+
+    public void ShowProgress()
+    {
+        
+    }
+
+    public void onRemove(InputFileChangeEventArgs args)
+    {
+        foreach (var removeFile in args.GetMultipleFiles())
+        {
+            if (File.Exists(Path.Combine(@"wwwroot\Videos\", removeFile.Name)))
+            {
+                File.Delete(Path.Combine(@"wwwroot\Videos\", removeFile.Name));
+            }
+        }
+    }
+}  

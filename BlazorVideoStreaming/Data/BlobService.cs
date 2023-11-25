@@ -10,17 +10,27 @@ namespace BlazorVideoStreaming.Data
         private readonly string _storageAccount = "devstoreaccount1";
         private readonly string _key = "Eby8vdM02xNOcqFlqUwJPLlmEtlCDXJ1OUzFT50uSRZ6IFsuFq2UVErCz4I6tq/K1SZFPTOtr/KBHBeksoGMGw==";
 
+        // Video Container
         private readonly BlobContainerClient _videoContainer;
-
+       
         public BlobService()
         {
+            var blobUrl = $"http://127.0.0.1:10000/{_storageAccount}/myvideos";
             var credential = new StorageSharedKeyCredential(_storageAccount, _key);
-            var blobUrl = $"http://127.0.0.1:10000/{_storageAccount}";
-            //var blobUrl = $"https://{_storageAccount}blobUrl.core.windows.net";
-            var client = new BlobServiceClient(new Uri(blobUrl), credential);
-            _videoContainer = client.GetBlobContainerClient("videos");
+            _videoContainer = new BlobContainerClient(new(blobUrl), credential);                                                
         }
 
+        public async Task UploadVideo(List<string> filepathvideos, Stream video)
+        {
+            // Create a container
+            await _videoContainer.CreateIfNotExistsAsync();
+
+            foreach (string caminho in filepathvideos)
+            {
+                await _videoContainer.UploadBlobAsync(caminho, video);
+            }
+
+        }
         public async Task<List<Video>> GetVideos()
         {
             var videos = new List<Video>();
@@ -35,5 +45,7 @@ namespace BlazorVideoStreaming.Data
 
             return videos;
         }
+
+
     }
 }
